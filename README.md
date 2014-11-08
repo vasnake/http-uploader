@@ -10,6 +10,8 @@ For those versions console client was created, written in Python.
 One version using HTML5 FileAPI, Socket.io and Node.js as a backend.
 One version using PHP on backend and Flash applet as a client.
 
+All that stuff  you can find here
+
 * node.uploader -- VCU version based on HTML5 FileAPI + Node.js + Socket.io technology.
 
 ### Links
