@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
-	<title>File Uploader</title>
-	<script src="/socket.io/socket.io.js"></script>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>File Uploader</title>
+    <script src="/socket.io/socket.io.js"></script>
 
 <script type="text/javascript" charset="utf-8">
 
@@ -20,213 +20,213 @@ socket.on('nextChunk', onSocketNextChunk);
 socket.on('fileProcessed', onSocketFileProcessed);
 
 function onDocReady() {
-	if(window.File && window.FileReader) { //These are the necessary HTML5 objects the we are going to use
-		document.getElementById('UploadButton').addEventListener('click', onClickStartUpload);
-		document.getElementById('FileBox').addEventListener('change', onFileChosen);
-	}
-	else {
-		document.getElementById('UploadArea').innerHTML = "Your Browser Doesn't Support The File API. Please Update Your Browser";
-	}
+    if(window.File && window.FileReader) { //These are the necessary HTML5 objects the we are going to use
+        document.getElementById('UploadButton').addEventListener('click', onClickStartUpload);
+        document.getElementById('FileBox').addEventListener('change', onFileChosen);
+    }
+    else {
+        document.getElementById('UploadArea').innerHTML = "Your Browser Doesn't Support The File API. Please Update Your Browser";
+    }
 } // function onDocReady()
 
 
 function onClickStartUpload() {
-	if(selectedFile !== '') {
-		fReader = new FileReader();
-		fileName = document.getElementById('NameBox').value;
-		htmlUploading();
-		fReader.onload = function(evnt) {
-			socket.emit('fileData', {'Name' : fileName, 'Data' : evnt.target.result});
-		}
-		socket.emit('fileMeta', {'Name' : fileName, 'Size' : selectedFile.size});
-	}
-	else {
-		alert("Please Select A File");
-	}
+    if(selectedFile !== '') {
+        fReader = new FileReader();
+        fileName = document.getElementById('NameBox').value;
+        htmlUploading();
+        fReader.onload = function(evnt) {
+            socket.emit('fileData', {'Name' : fileName, 'Data' : evnt.target.result});
+        }
+        socket.emit('fileMeta', {'Name' : fileName, 'Size' : selectedFile.size});
+    }
+    else {
+        alert("Please Select A File");
+    }
 } // function onClickStartUpload()
 
 
 function onFileChosen(evnt) {
-	selectedFile = evnt.target.files[0];
-	document.getElementById('NameBox').value = selectedFile.name;
+    selectedFile = evnt.target.files[0];
+    document.getElementById('NameBox').value = selectedFile.name;
 } // function onFileChosen(evnt)
 
 
 function onSocketNextChunk (data) { // socket.emit('nextChunk', { 'ChunkNum' : chunkNum, 'Percent' : pct });
-	var pct = data['Percent'];
-	var chunkNum = data['ChunkNum']; // chunk number (0 <= chunkNum < n; n = fSize/chunkSize)
-	htmlUpdatePct(pct);
-	var nextByte = chunkNum * chunkSize; //The Next Blocks Starting Position
-	var blob = getNextBlob(selectedFile, nextByte, chunkSize);
-	fReader.readAsBinaryString(blob);
+    var pct = data['Percent'];
+    var chunkNum = data['ChunkNum']; // chunk number (0 <= chunkNum < n; n = fSize/chunkSize)
+    htmlUpdatePct(pct);
+    var nextByte = chunkNum * chunkSize; //The Next Blocks Starting Position
+    var blob = getNextBlob(selectedFile, nextByte, chunkSize);
+    fReader.readAsBinaryString(blob);
 } // function onSocketNextChunk (data)
 
 
 function getNextBlob(fileObj, startPos, numBytes) {
-	var endPos = startPos + Math.min( numBytes, (fileObj.size - startPos) );
-	if(fileObj.webkitSlice)
-		return fileObj.webkitSlice(startPos, endPos);
-	else
-		return fileObj.mozSlice(startPos, endPos);
+    var endPos = startPos + Math.min( numBytes, (fileObj.size - startPos) );
+    if(fileObj.webkitSlice)
+        return fileObj.webkitSlice(startPos, endPos);
+    else
+        return fileObj.mozSlice(startPos, endPos);
 } // function getNextBlob(fileObj, startPos, numBytes)
 
 
 function htmlUploading() {
-	var htmlContent = "<span id='NameArea'>Uploading " + selectedFile.name + " as " + fileName + "</span>";
-	htmlContent += '<div id="ProgressContainer"><div id="ProgressBar"></div></div><span id="percent">0%</span>';
-	htmlContent += "<span id='Uploaded'> - <span id='MB'>0</span>/" + Math.round(selectedFile.size / mbBytes) + "MB</span>";
-	document.getElementById('UploadArea').innerHTML = htmlContent;
+    var htmlContent = "<span id='NameArea'>Uploading " + selectedFile.name + " as " + fileName + "</span>";
+    htmlContent += '<div id="ProgressContainer"><div id="ProgressBar"></div></div><span id="percent">0%</span>';
+    htmlContent += "<span id='Uploaded'> - <span id='MB'>0</span>/" + Math.round(selectedFile.size / mbBytes) + "MB</span>";
+    document.getElementById('UploadArea').innerHTML = htmlContent;
 } // function htmlUploading()
 
 
 function htmlUpdatePct(percent) {
-	document.getElementById('ProgressBar').style.width = percent + '%';
-	document.getElementById('percent').innerHTML = (Math.round(percent * 100) / 100) + '%';
-	var mbDone = Math.round(((percent / 100.0) * selectedFile.size) / mbBytes);
-	document.getElementById('MB').innerHTML = mbDone;
+    document.getElementById('ProgressBar').style.width = percent + '%';
+    document.getElementById('percent').innerHTML = (Math.round(percent * 100) / 100) + '%';
+    var mbDone = Math.round(((percent / 100.0) * selectedFile.size) / mbBytes);
+    document.getElementById('MB').innerHTML = mbDone;
 } // function htmlUpdatePct(percent)
 
 
 function onSocketFileProcessed (data) { // socket.emit('fileProcessed', {'Preview' : 'thumbnail.jpg'});
-	var htmlContent = "File Successfully Uploaded!"
-	htmlContent += "<img id='Thumb' src='" + data['Preview'] + "' alt='" + fileName + "'><br>";
-	htmlContent += "<button	type='button' name='Upload' value='' id='Restart' class='Button'>Upload Another</button>";
-	document.getElementById('UploadArea').innerHTML = htmlContent;
-	document.getElementById('Restart').addEventListener('click', onRefresh);
-	document.getElementById('UploadBox').style.width = '270px';
-	document.getElementById('UploadBox').style.height = '270px';
-	document.getElementById('UploadBox').style.textAlign = 'center';
-	document.getElementById('Restart').style.left = '20px';
+    var htmlContent = "File Successfully Uploaded!"
+    htmlContent += "<img id='Thumb' src='" + data['Preview'] + "' alt='" + fileName + "'><br>";
+    htmlContent += "<button	type='button' name='Upload' value='' id='Restart' class='Button'>Upload Another</button>";
+    document.getElementById('UploadArea').innerHTML = htmlContent;
+    document.getElementById('Restart').addEventListener('click', onRefresh);
+    document.getElementById('UploadBox').style.width = '270px';
+    document.getElementById('UploadBox').style.height = '270px';
+    document.getElementById('UploadBox').style.textAlign = 'center';
+    document.getElementById('Restart').style.left = '20px';
 } // function onSocketFileProcessed (data)
 
 
 function onRefresh() {
-	location.reload(true);
+    location.reload(true);
 }
 
 </script>
 
 <style type="text/css" media="screen">
 body {
-	background: #F9F9F9;
-	font-family: Calibri;
-	font-size: 18px;
+    background: #F9F9F9;
+    font-family: Calibri;
+    font-size: 18px;
 }
 
 h2 {
-	font-size: 40px;
-	margin-top: 6px;
-	margin-bottom: 10px;
+    font-size: 40px;
+    margin-top: 6px;
+    margin-bottom: 10px;
 }
 
 #Thumb {
-	max-width: 230px;
-	max-height: 130px;
+    max-width: 230px;
+    max-height: 130px;
 }
 
 #ProgressContainer {
-	width: 396px;
-	height: 36px;
-	background: #F8F8F8;
-	margin-top: 14px;
-	border: 1px solid #E8E8E8;
-	border-top: 1px solid #D8D8D8;
+    width: 396px;
+    height: 36px;
+    background: #F8F8F8;
+    margin-top: 14px;
+    border: 1px solid #E8E8E8;
+    border-top: 1px solid #D8D8D8;
 
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	padding: 2px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    padding: 2px;
 }
 
 #ProgressBar {
-	height: 100%;
-	width: 0%;
+    height: 100%;
+    width: 0%;
 
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	background: -webkit-gradient( linear, left top, left bottom, from(#a50aad), color-stop(0.50, #6b0d6b), to(#4a074a));
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    background: -webkit-gradient( linear, left top, left bottom, from(#a50aad), color-stop(0.50, #6b0d6b), to(#4a074a));
 }
 
 #UploadBox {
-	background: #FFF;
-	padding: 20px;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	margin-left: -200px;
-	margin-top: -150px;
-	height: 200px;
-	width: 400px;
-	border: 1px solid #DFDFDF;
+    background: #FFF;
+    padding: 20px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -200px;
+    margin-top: -150px;
+    height: 200px;
+    width: 400px;
+    border: 1px solid #DFDFDF;
 
-	-webkit-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
-	-moz-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
-	box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+    -webkit-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+    -moz-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+    box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
 
-	-webkit-border-radius: 11px;
-	-moz-border-radius: 11px;
-	border-radius: 11px;
+    -webkit-border-radius: 11px;
+    -moz-border-radius: 11px;
+    border-radius: 11px;
 }
 
 button.Button {
-	font-size: 18px;
-	color: #ffffff;
-	padding: 8px 30px;
-	background: -webkit-gradient( linear, left top, left bottom, from(#a50aad), color-stop(0.50, #6b0d6b), to(#4a074a));
+    font-size: 18px;
+    color: #ffffff;
+    padding: 8px 30px;
+    background: -webkit-gradient( linear, left top, left bottom, from(#a50aad), color-stop(0.50, #6b0d6b), to(#4a074a));
 
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	border-radius: 5px;
-	border: 1px solid #5b139e;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border: 1px solid #5b139e;
 
-	-webkit-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
-	-moz-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
-	box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
-	text-shadow: 0px -1px 0px rgba(000,000,000,0.1), 0px 1px 0px rgba(145,035,145,1);
-	position: absolute;
-	bottom: 20px;
-	right: 20px;
-	cursor: pointer;
+    -webkit-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
+    -moz-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
+    box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
+    text-shadow: 0px -1px 0px rgba(000,000,000,0.1), 0px 1px 0px rgba(145,035,145,1);
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    cursor: pointer;
 }
 
 button.Button:hover {
-	background: -webkit-gradient( linear, left top, left bottom, from(#a50aad), color-stop(0.80, #6b0d6b), to(#a50aad));
-	color: #D3D3D3;
+    background: -webkit-gradient( linear, left top, left bottom, from(#a50aad), color-stop(0.80, #6b0d6b), to(#a50aad));
+    color: #D3D3D3;
 }
 
 button.Button:active {
-	background: -webkit-gradient( linear, left top, left bottom, from(#4a074a), color-stop(0.80, #6b0d6b), to(#a50aad));
+    background: -webkit-gradient( linear, left top, left bottom, from(#4a074a), color-stop(0.80, #6b0d6b), to(#a50aad));
 }
 
 input {
-	margin-top: 10px;
-	margin-bottom: 8px;
+    margin-top: 10px;
+    margin-bottom: 8px;
 }
 
 input[type=text] {
-	border: 1px solid #CDCDCD;
-	border-top: 1px solid #676767;
+    border: 1px solid #CDCDCD;
+    border-top: 1px solid #676767;
 
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
-	font-size: 18px;
-	padding: 2px;
-	width: 300px;
-	margin-left: 10px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    font-size: 18px;
+    padding: 2px;
+    width: 300px;
+    margin-left: 10px;
 }
 
 </style>
 </head>
 <body>
-	<div id="UploadBox">
-		<h2>Chunked File Uploader</h2>
-		<span id='UploadArea'>
-			<label for="FileBox">Choose A File: </label><input type="file" id="FileBox"><br>
-			<label for="NameBox">Name: </label><input type="text" id="NameBox"><br>
-			<button	type='button' id='UploadButton' class='Button'>Upload</button>
-		</span>
-	</div>
+    <div id="UploadBox">
+        <h2>Chunked File Uploader</h2>
+        <span id='UploadArea'>
+            <label for="FileBox">Choose A File: </label><input type="file" id="FileBox"><br>
+            <label for="NameBox">Name: </label><input type="text" id="NameBox"><br>
+            <button	type='button' id='UploadButton' class='Button'>Upload</button>
+        </span>
+    </div>
 </body>
 </html>
