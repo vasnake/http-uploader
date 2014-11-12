@@ -141,31 +141,18 @@ function onFileWriteDone(err, written, buffer, fName, socket) {
         filesList[fName] = fObj;
     });
 
-    // TODO: move file from temp to repo
-    //~ fs.rename("Temp/" + Name, "Video/" + Name,
-        //~ function() {
-            //~ fs.unlink("Temp/" + Name,
-                //~ function () {
-                    //~ console.log("unlink this file:",Name );
-                    //~ socket.emit('Done', {'Image' : 'Video/' + Name + '.jpg'});
-                //~ }
-            //~ );
-        //~ }
-    //~ );
-
     var tempName = tempDir + '/' + fName;
-    var inp = fs.createReadStream(tempName);
-    var out = fs.createWriteStream(targetDir + '/' + fName);
-    util.pump(inp, out,
-        function() {
-            fs.unlink(tempName,
-                function () {
-                socket.emit('fileProcessed', {'Preview' : fName + '.thumbnail.jpg'});
-                //exec("ffmpeg -i Video/" + Name  + " -ss 01:30 -r 1 -an -vframes 1 -f mjpeg Video/" + Name  + ".jpg", function(err){
-                //  socket.emit('Done', {'Image' : 'Video/' + Name + '.jpg'});
-                //});
-                }
-            );
+    var repoName = targetDir + '/' + fName;
+    fs.rename(tempName, repoName,
+        function(err) {
+            var msg = '';
+            if(err) {
+                var msg = util.format('onFileWriteDone. fs.rename error: %j', err);
+                console.log(msg);
+            }
+            var stat = {'Message' : msg, 'Preview' : fName + '.thumbnail.jpg'};
+            util.log(util.format('onFileWriteDone. Send status %j', stat));
+            socket.emit('fileProcessed', stat);
         }
     );
 } // function onFileWriteDone(err, written, buffer, fName, socket)

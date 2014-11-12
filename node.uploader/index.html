@@ -60,7 +60,7 @@ function onClickStartUpload() {
 function onSocketNextChunk(data) {
     // socket.on('nextChunk', onSocketNextChunk);
     // nextChunk example {"ChunkNum":0,"Percent":0}
-    console.log('onSocketNextChunk. nextChunk requered: ', data);
+    console.log('onSocketNextChunk. nextChunk required: ', data);
     var pct = data['Percent'];
     var chunkNum = data['ChunkNum']; // chunk number (0 <= chunkNum < n; n = fSize/chunkSize)
     // update ProgressBar
@@ -109,10 +109,15 @@ function htmlUpdatePct(percent) {
 
 function onSocketFileProcessed(data) {
     // socket.on('fileProcessed', onSocketFileProcessed);
-    var htmlContent = "File Successfully Uploaded!"
+    console.log('onSocketFileProcessed. Status: ', data);
+    var htmlContent = "<span>File Successfully Uploaded!</span> <br>"
+    if(data['Message']) {
+        htmlContent = "<span>Upload failed: " + data['Message'] + "</span> <br>";
+    }
     htmlContent += "<img id='Thumb' src='" + data['Preview'] + "' alt='" + fileName + "'><br>";
     htmlContent += "<button type='button' name='Upload' value='' id='Restart' class='ResetButton'>Upload Another</button>";
     document.getElementById('UploadArea').innerHTML = htmlContent;
+
     document.getElementById('Restart').addEventListener('click', onRefresh);
     document.getElementById('UploadBox').style.width = '270px';
     document.getElementById('UploadBox').style.height = '270px';
