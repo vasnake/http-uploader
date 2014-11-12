@@ -5,15 +5,19 @@ var targetDir = 'Repo';          // mkdir Temp; mkdir Repo; node app.js
 var mbBytes = 1048576;           // bytes in megabyte
 var chunkSize = 3 * mbBytes;     // chunk size in bytes
 var bufMaxSize = 10485760;       // 10 MB
+var ipPort = 8080;
 
 var app = require('http').createServer(httpResponder),
     io = require('socket.io').listen(app),
     fs = require('fs'),
     exec = require('child_process').exec,
     util = require('util'),
+    os = require('os'),
     filesList = {};
 
-app.listen(8080); // http://servername:8080/
+app.listen(ipPort);
+// print to stdout with timestamp
+util.log(util.format('Server running at http://%s:%s/', os.hostname(), ipPort));
 io.sockets.on('connection', onSocketConnect);
 
 
@@ -39,6 +43,8 @@ function onSocketConnect(socket) {
 
 function onSocketFileMeta (data, socket) {
     // start recieve file; socket.on('fileMeta' ...
+    // data example {Name: "v2.0.png", Size: 337147}
+    util.log(util.format('onSocketFileMeta. data: %j', data));
     var fName = data['Name'],
         fSize = data['Size'];
     var fullName = tempDir + '/' + fName;
@@ -59,18 +65,24 @@ function onSocketFileMeta (data, socket) {
     }
     catch(err) {
         // It's a New File
-        console.log(err);
+        console.log("onSocketFileMeta. It's a new file", err);
     }
 
     filesList[fName] = fObj;
-    fs.open(fullName, 'a', 0644, function(err, fd) {onFileOpen(err, fd, fName, socket);});
+    util.log(util.format('onSocketFileMeta. opening file %s', fullName));
+    fs.open(fullName, 'a', 0644,
+        function(err, fd) {
+            onFileOpen(err, fd, fName, socket);
+        }
+    );
 } // function onSocketFileMeta (data, socket)
 
 
 function onFileOpen(err, fd, fName, socket) {
     var fObj = filesList[fName];
     if(err) {
-        console.log(err);
+        //console.log(err);
+        console.log("onFileOpen. File can't be opened/created, check %s dir. ", tempDir, err);
     }
     else {
         // We store the file handler so we can write to it later
@@ -84,7 +96,9 @@ function onFileOpen(err, fd, fName, socket) {
 function getNextChunk(fObj, socket) {
     var pct = (fObj.rcvdBytes / fObj.fSize) * 100;
     var chunkNum = fObj.rcvdBytes / chunkSize;
-    socket.emit('nextChunk', { 'ChunkNum' : chunkNum, 'Percent' : pct });
+    var chunk = { 'ChunkNum' : chunkNum, 'Percent' : pct };
+    util.log(util.format('getNextChunk. Ask nextChunk %j', chunk));
+    socket.emit('nextChunk', chunk);
 } // function getNextChunk(fObj, socket)
 
 
@@ -146,7 +160,7 @@ function onFileWriteDone(err, written, buffer, fName, socket) {
         function() {
             fs.unlink(tempName,
                 function () {
-                socket.emit('fileProcessed', {'Preview' : 'thumbnail.jpg'});
+                socket.emit('fileProcessed', {'Preview' : fName + '.thumbnail.jpg'});
                 //exec("ffmpeg -i Video/" + Name  + " -ss 01:30 -r 1 -an -vframes 1 -f mjpeg Video/" + Name  + ".jpg", function(err){
                 //  socket.emit('Done', {'Image' : 'Video/' + Name + '.jpg'});
                 //});

@@ -30,14 +30,25 @@ function onDocReady() {
 } // function onDocReady()
 
 
+function onFileChosen(evnt) {
+    selectedFile = evnt.target.files[0];
+    document.getElementById('NameBox').value = selectedFile.name;
+} // function onFileChosen(evnt)
+
+
 function onClickStartUpload() {
     if(selectedFile !== '') {
         fReader = new FileReader();
         fileName = document.getElementById('NameBox').value;
+        // insert ProgressBar
         htmlUploading();
+
         fReader.onload = function(evnt) {
+            console.log('fReader.onload, send next chunk to socket');
             socket.emit('fileData', {'Name' : fileName, 'Data' : evnt.target.result});
         }
+        fileMeta = {'Name' : fileName, 'Size' : selectedFile.size};
+        console.log('onClickStartUpload. send metadata to socket: ',  fileMeta);
         socket.emit('fileMeta', {'Name' : fileName, 'Size' : selectedFile.size});
     }
     else {
@@ -46,28 +57,37 @@ function onClickStartUpload() {
 } // function onClickStartUpload()
 
 
-function onFileChosen(evnt) {
-    selectedFile = evnt.target.files[0];
-    document.getElementById('NameBox').value = selectedFile.name;
-} // function onFileChosen(evnt)
-
-
-function onSocketNextChunk (data) { // socket.emit('nextChunk', { 'ChunkNum' : chunkNum, 'Percent' : pct });
+function onSocketNextChunk(data) {
+    // socket.on('nextChunk', onSocketNextChunk);
+    // nextChunk example {"ChunkNum":0,"Percent":0}
+    console.log('onSocketNextChunk. nextChunk requered: ', data);
     var pct = data['Percent'];
     var chunkNum = data['ChunkNum']; // chunk number (0 <= chunkNum < n; n = fSize/chunkSize)
+    // update ProgressBar
     htmlUpdatePct(pct);
+
     var nextByte = chunkNum * chunkSize; //The Next Blocks Starting Position
     var blob = getNextBlob(selectedFile, nextByte, chunkSize);
-    fReader.readAsBinaryString(blob);
+    fReader.readAsBinaryString(blob); // fReader.onload
 } // function onSocketNextChunk (data)
 
 
 function getNextBlob(fileObj, startPos, numBytes) {
-    var endPos = startPos + Math.min( numBytes, (fileObj.size - startPos) );
-    if(fileObj.webkitSlice)
-        return fileObj.webkitSlice(startPos, endPos);
-    else
-        return fileObj.mozSlice(startPos, endPos);
+    var endPos = startPos + Math.min(numBytes, (fileObj.size - startPos));
+    console.log('getNextBlob. Slice start %s, end %s', startPos, endPos);
+    try {
+        if(fileObj.slice)
+            return fileObj.slice(startPos, endPos);
+        else if(fileObj.webkitSlice)
+            return fileObj.webkitSlice(startPos, endPos);
+        else
+            return fileObj.mozSlice(startPos, endPos);
+    }
+    catch(err) {
+        msg = 'getNextBlob. Blob.slice is undefined, abort mission.';
+        console.log(msg, err);
+        alert(msg);
+    }
 } // function getNextBlob(fileObj, startPos, numBytes)
 
 
@@ -87,10 +107,11 @@ function htmlUpdatePct(percent) {
 } // function htmlUpdatePct(percent)
 
 
-function onSocketFileProcessed (data) { // socket.emit('fileProcessed', {'Preview' : 'thumbnail.jpg'});
+function onSocketFileProcessed(data) {
+    // socket.on('fileProcessed', onSocketFileProcessed);
     var htmlContent = "File Successfully Uploaded!"
     htmlContent += "<img id='Thumb' src='" + data['Preview'] + "' alt='" + fileName + "'><br>";
-    htmlContent += "<button	type='button' name='Upload' value='' id='Restart' class='Button'>Upload Another</button>";
+    htmlContent += "<button type='button' name='Upload' value='' id='Restart' class='ResetButton'>Upload Another</button>";
     document.getElementById('UploadArea').innerHTML = htmlContent;
     document.getElementById('Restart').addEventListener('click', onRefresh);
     document.getElementById('UploadBox').style.width = '270px';
@@ -131,9 +152,6 @@ h2 {
     margin-top: 14px;
     border: 1px solid #E8E8E8;
     border-top: 1px solid #D8D8D8;
-
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
     border-radius: 4px;
     padding: 2px;
 }
@@ -141,62 +159,48 @@ h2 {
 #ProgressBar {
     height: 100%;
     width: 0%;
-
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
     border-radius: 4px;
-    background: -webkit-gradient( linear, left top, left bottom, from(#a50aad), color-stop(0.50, #6b0d6b), to(#4a074a));
+    background: rgba(110, 110, 140, 0.1);
 }
 
 #UploadBox {
     background: #FFF;
     padding: 20px;
-    position: absolute;
+    /* position: absolute; */
     top: 50%;
     left: 50%;
-    margin-left: -200px;
-    margin-top: -150px;
-    height: 200px;
-    width: 400px;
+    margin-left: 100px;
+    margin-top: 100px;
+
+    /* height: 200px; */
+    width: 30em;
+
     border: 1px solid #DFDFDF;
-
-    -webkit-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
-    -moz-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
     box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
-
-    -webkit-border-radius: 11px;
-    -moz-border-radius: 11px;
     border-radius: 11px;
 }
 
 button.Button {
     font-size: 18px;
-    color: #ffffff;
     padding: 8px 30px;
-    background: -webkit-gradient( linear, left top, left bottom, from(#a50aad), color-stop(0.50, #6b0d6b), to(#4a074a));
-
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
+    background: rgba(120, 130, 140, 0.5);
     border-radius: 5px;
     border: 1px solid #5b139e;
-
-    -webkit-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
-    -moz-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
     box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
     text-shadow: 0px -1px 0px rgba(000,000,000,0.1), 0px 1px 0px rgba(145,035,145,1);
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
+    position: relative;
+    bottom: 2.5em;
+    right: -20em;
     cursor: pointer;
 }
 
 button.Button:hover {
-    background: -webkit-gradient( linear, left top, left bottom, from(#a50aad), color-stop(0.80, #6b0d6b), to(#a50aad));
-    color: #D3D3D3;
+    background: rgba(110, 110, 140, 0.1);
+    color: rgba(1, 1, 1, 0.1);
 }
 
 button.Button:active {
-    background: -webkit-gradient( linear, left top, left bottom, from(#4a074a), color-stop(0.80, #6b0d6b), to(#a50aad));
+    background: #fc0;
 }
 
 input {
@@ -207,13 +211,10 @@ input {
 input[type=text] {
     border: 1px solid #CDCDCD;
     border-top: 1px solid #676767;
-
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
     border-radius: 3px;
     font-size: 18px;
     padding: 2px;
-    width: 300px;
+    width: 270px;
     margin-left: 10px;
 }
 
@@ -222,11 +223,11 @@ input[type=text] {
 <body>
     <div id="UploadBox">
         <h2>Chunked File Uploader</h2>
-        <span id='UploadArea'>
+        <div id='UploadArea'>
             <label for="FileBox">Choose A File: </label><input type="file" id="FileBox"><br>
             <label for="NameBox">Name: </label><input type="text" id="NameBox"><br>
             <button	type='button' id='UploadButton' class='Button'>Upload</button>
-        </span>
+        </div>
     </div>
 </body>
 </html>

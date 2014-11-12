@@ -10,4 +10,4 @@ var server = http.createServer(
 
 server.listen(1337, "0.0.0.0");
 
-console.log('Server running at <a href="http://node:1337/">http://node:1337/</a>');
+console.log('Server running at http://hostname:1337/');
