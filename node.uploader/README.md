@@ -9,6 +9,8 @@ HTML5 FileAPI + Node.js + Socket.io -- http://vasnake.blogspot.ru/2012/06/resuma
 * app.js -- Node.js application
 * index.html -- web application
 
+![screenshot 1](screenshot.png "screenshot 1")
+
 ### Install
 
 This instructions was tested on CentOS 6.4
