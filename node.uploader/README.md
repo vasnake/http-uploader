@@ -50,6 +50,10 @@ node app.js
 Suppose you have installed Node.js on localhost,
 open URL http://localhost:8080/ in your web browser and upload any file.
 
+If you have some strange problems, try to decrease
+chunkSize variables in app.js and index.html.
+Chrome browser works faster, but less stable with large chunkSize value.
+
 ### Links
 
 * How to Create a Resumable Video Uploader in Node.js -- http://code.tutsplus.com/tutorials/how-to-create-a-resumable-video-uploade-in-node-js--net-25445

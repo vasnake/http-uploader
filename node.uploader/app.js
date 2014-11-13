@@ -3,8 +3,8 @@
 var tempDir = 'Temp';
 var targetDir = 'Repo';          // mkdir Temp; mkdir Repo; node app.js
 var mbBytes = 1048576;           // bytes in megabyte
-var chunkSize = 3 * mbBytes;     // chunk size in bytes
-var bufMaxSize = 10485760;       // 10 MB
+var chunkSize = 8 * mbBytes;    // chunk size in bytes
+var bufMaxSize = 16 * mbBytes;   // storage io buffer
 var ipPort = 8080;
 
 var app = require('http').createServer(httpResponder),

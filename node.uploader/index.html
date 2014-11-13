@@ -14,7 +14,7 @@ var fReader = '';         // FileReader object
 var fileName = '';        // selected file name
 var selectedFile = '';     // file object
 var mbBytes = 1048576;     // bytes in megabyte
-var chunkSize = 3 * mbBytes; // chunk size in bytes
+var chunkSize = 8 * mbBytes; // chunk size in bytes
 
 socket.on('nextChunk', onSocketNextChunk);
 socket.on('fileProcessed', onSocketFileProcessed);
@@ -49,7 +49,7 @@ function onClickStartUpload() {
         }
         fileMeta = {'Name' : fileName, 'Size' : selectedFile.size};
         console.log('onClickStartUpload. send metadata to socket: ',  fileMeta);
-        socket.emit('fileMeta', {'Name' : fileName, 'Size' : selectedFile.size});
+        socket.emit('fileMeta', fileMeta);
     }
     else {
         alert("Please Select A File");
@@ -63,10 +63,20 @@ function onSocketNextChunk(data) {
     console.log('onSocketNextChunk. nextChunk required: ', data);
     var pct = data['Percent'];
     var chunkNum = data['ChunkNum']; // chunk number (0 <= chunkNum < n; n = fSize/chunkSize)
-    // update ProgressBar
-    htmlUpdatePct(pct);
-
     var nextByte = chunkNum * chunkSize; //The Next Blocks Starting Position
+
+    // update ProgressBar
+    try {
+        var elapsedSec = (Date.now() - startTime) / 1000;
+        var processedMB = chunkSize / mbBytes;
+        var speed = Math.round(processedMB / elapsedSec);
+        htmlUpdatePct(pct, speed);
+    }
+    catch(err) {
+        htmlUpdatePct(pct, '?');
+    }
+    startTime = Date.now();
+
     var blob = getNextBlob(selectedFile, nextByte, chunkSize);
     fReader.readAsBinaryString(blob); // fReader.onload
 } // function onSocketNextChunk (data)
@@ -99,12 +109,12 @@ function htmlUploading() {
 } // function htmlUploading()
 
 
-function htmlUpdatePct(percent) {
+function htmlUpdatePct(percent, speed) {
     document.getElementById('ProgressBar').style.width = percent + '%';
-    document.getElementById('percent').innerHTML = (Math.round(percent * 100) / 100) + '%';
+    document.getElementById('percent').innerHTML = speed + ' MB/sec; ' + (Math.round(percent * 100) / 100) + '%';
     var mbDone = Math.round(((percent / 100.0) * selectedFile.size) / mbBytes);
     document.getElementById('MB').innerHTML = mbDone;
-} // function htmlUpdatePct(percent)
+} // function htmlUpdatePct(percent, speed)
 
 
 function onSocketFileProcessed(data) {
