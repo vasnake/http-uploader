@@ -1,0 +1,144 @@
+--- httpd.conf.orig	2010-10-17 23:12:28.000000000 +0400
++++ httpd.conf	2010-10-17 23:23:30.000000000 +0400
+@@ -2,13 +2,13 @@
+ # This is the main Apache HTTP server configuration file.  It contains the
+ # configuration directives that give the server its instructions.
+ # See <URL:http://httpd.apache.org/docs/2.2> for detailed information.
+-# In particular, see 
++# In particular, see
+ # <URL:http://httpd.apache.org/docs/2.2/mod/directives.html>
+ # for a discussion of each configuration directive.
+ #
+ # Do NOT simply read the instructions in here without understanding
+ # what they do.  They're here only as hints or reminders.  If you are unsure
+-# consult the online docs. You have been warned.  
++# consult the online docs. You have been warned.
+ #
+ # Configuration and logfile names: If the filenames you specify for many
+ # of the server's control files begin with "/" (or "drive:/" for Win32), the
+@@ -39,7 +39,7 @@
+ # ports, instead of the default. See also the <VirtualHost>
+ # directive.
+ #
+-# Change this to Listen on specific IP addresses as shown below to 
++# Change this to Listen on specific IP addresses as shown below to
+ # prevent Apache from glomming onto all bound IP addresses.
+ #
+ #Listen 12.34.56.78:80
+@@ -130,7 +130,7 @@
+ <IfModule !mpm_winnt_module>
+ #
+ # If you wish httpd to run as a different user or group, you must run
+-# httpd as root initially and it will switch.  
++# httpd as root initially and it will switch.
+ #
+ # User/Group: The name (or #number) of the user/group to run httpd as.
+ # It is usually good practice to create a dedicated user and group for
+@@ -168,7 +168,7 @@
+ #
+ # If your host doesn't have a registered DNS name, enter its IP address here.
+ #
+-#ServerName ie8.nhome.net:80
++#ServerName alwaysglum.dyndns.org:80
+ 
+ #
+ # DocumentRoot: The directory out of which you will serve your
+@@ -180,10 +180,10 @@
+ #
+ # Each directory to which Apache has access can be configured with respect
+ # to which services and features are allowed and/or disabled in that
+-# directory (and its subdirectories). 
++# directory (and its subdirectories).
+ #
+-# First, we configure the "default" to be a very restrictive set of 
+-# features.  
++# First, we configure the "default" to be a very restrictive set of
++# features.
+ #
+ <Directory />
+     Options FollowSymLinks
+@@ -237,12 +237,12 @@
+ # is requested.
+ #
+ <IfModule dir_module>
+-    DirectoryIndex index.html
++    DirectoryIndex index.php index.html
+ </IfModule>
+ 
+ #
+-# The following lines prevent .htaccess and .htpasswd files from being 
+-# viewed by Web clients. 
++# The following lines prevent .htaccess and .htpasswd files from being
++# viewed by Web clients.
+ #
+ <FilesMatch "^\.ht">
+     Order allow,deny
+@@ -297,11 +297,11 @@
+ 
+ <IfModule alias_module>
+     #
+-    # Redirect: Allows you to tell clients about documents that used to 
+-    # exist in your server's namespace, but do not anymore. The client 
++    # Redirect: Allows you to tell clients about documents that used to
++    # exist in your server's namespace, but do not anymore. The client
+     # will make a new request for the document at its new location.
+     # Example:
+-    # Redirect permanent /foo http://ie8.nhome.net/bar
++    # Redirect permanent /foo http://alwaysglum.dyndns.org/bar
+ 
+     #
+     # Alias: Maps web paths into filesystem paths and is used to
+@@ -315,7 +315,7 @@
+     # the filesystem path.
+ 
+     #
+-    # ScriptAlias: This controls which directories contain server scripts. 
++    # ScriptAlias: This controls which directories contain server scripts.
+     # ScriptAliases are essentially the same as Aliases, except that
+     # documents in the target directory are treated as applications and
+     # run by the server when requested rather than as documents sent to the
+@@ -419,14 +419,14 @@
+ #ErrorDocument 500 "The server made a boo boo."
+ #ErrorDocument 404 /missing.html
+ #ErrorDocument 404 "/cgi-bin/missing_handler.pl"
+-#ErrorDocument 402 http://ie8.nhome.net/subscription_info.html
++#ErrorDocument 402 http://alwaysglum.dyndns.org/subscription_info.html
+ #
+ 
+ #
+-# EnableMMAP and EnableSendfile: On systems that support it, 
++# EnableMMAP and EnableSendfile: On systems that support it,
+ # memory-mapping or the sendfile syscall is used to deliver
+ # files.  This usually improves server performance, but must
+-# be turned off when serving from networked-mounted 
++# be turned off when serving from networked-mounted
+ # filesystems or if support for these functions is otherwise
+ # broken on your system.
+ #
+@@ -435,9 +435,9 @@
+ 
+ # Supplemental configuration
+ #
+-# The configuration files in the conf/extra/ directory can be 
+-# included to add extra features or to modify the default configuration of 
+-# the server, or you may simply copy their contents here and change as 
++# The configuration files in the conf/extra/ directory can be
++# included to add extra features or to modify the default configuration of
++# the server, or you may simply copy their contents here and change as
+ # necessary.
+ 
+ # Server-pool management (MPM specific)
+@@ -484,7 +484,11 @@
+ 
+ 
+ #BEGIN PHP INSTALLER EDITS - REMOVE ONLY ON UNINSTALL
+-ScriptAlias /php/ "c:/PHP/"
+-Action application/x-httpd-php "c:/PHP/php-cgi.exe"
++#ScriptAlias /php/ "C:/PHP/"
++#Action application/x-httpd-php "C:/PHP/php-cgi.exe"
+ #END PHP INSTALLER EDITS - REMOVE ONLY ON UNINSTALL
+ 
++# For PHP 5 do something like this:
++LoadModule php5_module "c:\php\php5apache2_2.dll"
++AddType application/x-httpd-php .php
++PHPIniDir "C:\php"
