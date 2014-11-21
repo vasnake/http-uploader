@@ -44,6 +44,7 @@ Then copy app files to web server:
 
 ```sh
 mkdir -p /var/plupl
+chown -R apache /var/plupl
 mkdir -p /var/www/html/upl && cd $_
 svn checkout https://github.com/vasnake/http-uploader/trunk/plupload.fixed/app ./
 ```
