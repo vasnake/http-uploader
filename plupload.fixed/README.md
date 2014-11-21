@@ -43,8 +43,20 @@ to be sure that PHP working as expected.
 Then copy app files to web server:
 
 ```sh
+mkdir -p /var/plupl
 mkdir -p /var/www/html/upl && cd $_
 svn checkout https://github.com/vasnake/http-uploader/trunk/plupload.fixed/app ./
+```
+
+Set PHP variables
+
+```sh
+grep -r -i --color "upload_tmp_dir" /etc/
+nano /etc/php.ini
+...
+upload_tmp_dir = /var/plupl
+...
+service httpd restart
 ```
 
 ### Run

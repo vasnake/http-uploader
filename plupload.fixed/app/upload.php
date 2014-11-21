@@ -7,6 +7,8 @@
  *
  * License: http://www.plupload.com/license
  * Contributing: http://www.plupload.com/contributing
+ *
+ * Fixed by vasnake@gmail.com
  */
 
     // 50 minutes execution time
