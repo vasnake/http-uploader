@@ -55,6 +55,7 @@ Set PHP variables
 grep -r -i --color "upload_tmp_dir" /etc/
 nano /etc/php.ini
 ...
+# you will find all uploaded files in this folder
 upload_tmp_dir = /var/plupl
 ...
 service httpd restart
