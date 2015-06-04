@@ -3,18 +3,24 @@
 <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <title>File Uploader</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="socket.io/socket.io.js"></script>
 
 <script type="text/javascript" charset="utf-8">
 
 window.addEventListener("load", onDocReady);
 
-var socket = io.connect(); // connect at the same host / port as your website
+var socket = io.connect(
+    'https://alwaysgloom.sytes.net',
+    {path: '/node/vcu/socket.io'});
+// var socket = io.connect('https://alwaysgloom.sytes.net/node/vcu/', {resource: 'node/vcu/socket.io'}); // connect at the same host / port as your website
+//var socket = io.connect('', {path: '/node/vcu/socket.io'}); // connect at the same host / port as your website
+// var socket = io.connect('https://alwaysgloom.sytes.net/node/vcu/'); // connect at the same host / port as your website
 var fReader = '';         // FileReader object
 var fileName = '';        // selected file name
 var selectedFile = '';     // file object
 var mbBytes = 1048576;     // bytes in megabyte
-var chunkSize = 8 * mbBytes; // chunk size in bytes
+//var chunkSize = 8 * mbBytes; // chunk size in bytes
+var chunkSize = 1 * mbBytes; // chunk size in bytes
 
 socket.on('nextChunk', onSocketNextChunk);
 socket.on('fileProcessed', onSocketFileProcessed);
@@ -45,6 +51,7 @@ function onClickStartUpload() {
 
         fReader.onload = function(evnt) {
             console.log('fReader.onload, send next chunk to socket');
+            //arrayBuff = this.result;
             socket.emit('fileData', {'Name' : fileName, 'Data' : evnt.target.result});
         }
         fileMeta = {'Name' : fileName, 'Size' : selectedFile.size};
@@ -78,7 +85,14 @@ function onSocketNextChunk(data) {
     startTime = Date.now();
 
     var blob = getNextBlob(selectedFile, nextByte, chunkSize);
-    fReader.readAsBinaryString(blob); // fReader.onload
+    try {
+        fReader.readAsArrayBuffer(blob);
+    }
+    catch(err) {
+        console.log('onSocketNextChunk, fileReader.readAsArrayBuffer failed');
+        alert("Your browser can't read files from disk, sorry.");
+        //fReader.readAsBinaryString(blob); // fReader.onload
+    }
 } // function onSocketNextChunk (data)
 
 

@@ -3,12 +3,14 @@
 var tempDir = 'Temp';
 var targetDir = 'Repo';          // mkdir Temp; mkdir Repo; node app.js
 var mbBytes = 1048576;           // bytes in megabyte
-var chunkSize = 8 * mbBytes;    // chunk size in bytes
-var bufMaxSize = 16 * mbBytes;   // storage io buffer
+//var chunkSize = 8 * mbBytes;    // chunk size in bytes
+var chunkSize = 1 * mbBytes;    // chunk size in bytes
+var bufMaxSize = 3 * mbBytes;   // storage io buffer
 var ipPort = 8080;
 
 var app = require('http').createServer(httpResponder),
-    io = require('socket.io').listen(app),
+//    io = require('socket.io').listen(app, {path: '/node/vcu/socket.io'}),
+    io = require('socket.io').listen(app, {'transports': ['polling']}),
     fs = require('fs'),
     exec = require('child_process').exec,
     util = require('util'),
@@ -101,15 +103,28 @@ function getNextChunk(fObj, socket) {
     socket.emit('nextChunk', chunk);
 } // function getNextChunk(fObj, socket)
 
+function arrayBufferToBuffer(ab) {
+    var buffer = new Buffer(ab.length);
+    var view = new Uint8Array(ab);
+    for (var i = 0; i < buffer.length; ++i) {
+        buffer[i] = view[i];
+    }
+    return buffer;
+}
 
 function onSocketFileData(data, socket) {
     // socket.on('fileData' ...
     var fName = data['Name'];
-    var blob = data['Data']
+    var ab = data['Data'] // ArrayBuffer
+    var blob = new Buffer(new Uint8Array(ab));
+    //var blob = arrayBufferToBuffer(ab);
 
     var fObj = filesList[fName];
-    fObj.rcvdBytes += blob.length;
-    fObj.bytesBuf += blob;
+    fObj.rcvdBytes += ab.length;
+    if(Buffer.isBuffer(fObj.bytesBuf))
+        fObj.bytesBuf = Buffer.concat([fObj.bytesBuf, blob]);
+    else
+        fObj.bytesBuf = blob;
     filesList[fName] = fObj;
 
     if(fObj.rcvdBytes == fObj.fSize) {
