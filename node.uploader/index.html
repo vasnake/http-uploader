@@ -9,12 +9,13 @@
 
 window.addEventListener("load", onDocReady);
 
-var socket = io.connect(
-    'https://alwaysgloom.sytes.net',
-    {path: '/node/vcu/socket.io'});
-// var socket = io.connect('https://alwaysgloom.sytes.net/node/vcu/', {resource: 'node/vcu/socket.io'}); // connect at the same host / port as your website
-//var socket = io.connect('', {path: '/node/vcu/socket.io'}); // connect at the same host / port as your website
-// var socket = io.connect('https://alwaysgloom.sytes.net/node/vcu/'); // connect at the same host / port as your website
+// app behind https proxy
+//var socket = io.connect(
+//    'https://alwaysgloom.sytes.net',
+//    {path: '/node/vcu/socket.io'});
+// direct access to app
+var socket = io.connect();
+
 var fReader = '';         // FileReader object
 var fileName = '';        // selected file name
 var selectedFile = '';     // file object
@@ -50,9 +51,9 @@ function onClickStartUpload() {
         htmlUploading();
 
         fReader.onload = function(evnt) {
-            console.log('fReader.onload, send next chunk to socket');
-            //arrayBuff = this.result;
-            socket.emit('fileData', {'Name' : fileName, 'Data' : evnt.target.result});
+            var buf = evnt.target.result; // this.result?
+            console.log('fReader.onload, send next chunk to socket', buf);
+            socket.emit('fileData', {'Name' : fileName, 'Data' : buf});
         }
         fileMeta = {'Name' : fileName, 'Size' : selectedFile.size};
         console.log('onClickStartUpload. send metadata to socket: ',  fileMeta);
@@ -89,7 +90,7 @@ function onSocketNextChunk(data) {
         fReader.readAsArrayBuffer(blob);
     }
     catch(err) {
-        console.log('onSocketNextChunk, fileReader.readAsArrayBuffer failed');
+        console.log('onSocketNextChunk, fileReader.readAsArrayBuffer failed', err);
         alert("Your browser can't read files from disk, sorry.");
         //fReader.readAsBinaryString(blob); // fReader.onload
     }

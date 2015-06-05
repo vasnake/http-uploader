@@ -9,7 +9,6 @@ var bufMaxSize = 3 * mbBytes;   // storage io buffer
 var ipPort = 8080;
 
 var app = require('http').createServer(httpResponder),
-//    io = require('socket.io').listen(app, {path: '/node/vcu/socket.io'}),
     io = require('socket.io').listen(app, {'transports': ['polling']}),
     fs = require('fs'),
     exec = require('child_process').exec,
@@ -115,7 +114,8 @@ function arrayBufferToBuffer(ab) {
 function onSocketFileData(data, socket) {
     // socket.on('fileData' ...
     var fName = data['Name'];
-    var ab = data['Data'] // ArrayBuffer
+    var ab = data['Data']; // ArrayBuffer
+    console.log('onSocketFileData, Data:', ab);
     var blob = new Buffer(new Uint8Array(ab));
     //var blob = arrayBufferToBuffer(ab);
 
