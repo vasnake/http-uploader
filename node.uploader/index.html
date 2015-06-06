@@ -10,11 +10,11 @@
 window.addEventListener("load", onDocReady);
 
 // app behind https proxy
-//var socket = io.connect(
-//    'https://alwaysgloom.sytes.net',
-//    {path: '/node/vcu/socket.io'});
+var socket = io.connect(
+    'https://alwaysgloom.sytes.net',
+    {path: '/node/vcu/socket.io'});
 // direct access to app
-var socket = io.connect();
+//var socket = io.connect();
 
 var fReader = '';         // FileReader object
 var fileName = '';        // selected file name

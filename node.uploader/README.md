@@ -56,6 +56,38 @@ If you have some strange problems, try to decrease
 chunkSize variables in app.js and index.html.
 Chrome browser works faster, but less stable with large chunkSize value.
 
+### HTTPS reverse proxy
+
+In case you want to run this app behind HTTPS reverse proxy.
+Lets assume, your host named alwaysgloom.sytes.net and
+Apache httpd config looks like this:
+
+```
+# /etc/apache2/sites-available/rover-ssl.conf
+...
+<Location /node/vcu/>
+        Order allow,deny
+        allow from all
+        AuthType Basic
+        AuthUserFile /home/valik/.htpasswd
+        AuthName "Alwaysglum restricted services"
+        Require valid-user
+    ProxyPass http://localhost:8080/
+</Location>
+...
+```
+
+In that case, you need to change index.html file
+according to this snippet:
+
+```
+// index.html
+// app behind https proxy
+var socket = io.connect(
+    'https://alwaysgloom.sytes.net',
+    {path: '/node/vcu/socket.io'});
+```
+
 ### Links
 
 * How to Create a Resumable Video Uploader in Node.js -- http://code.tutsplus.com/tutorials/how-to-create-a-resumable-video-uploade-in-node-js--net-25445
