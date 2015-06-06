@@ -9,6 +9,7 @@ var bufMaxSize = 3 * mbBytes;   // storage io buffer
 var ipPort = 8080;
 
 var app = require('http').createServer(httpResponder),
+    // transports: polling only because of https proxy
     io = require('socket.io').listen(app, {'transports': ['polling']}),
     fs = require('fs'),
     exec = require('child_process').exec,
@@ -114,8 +115,8 @@ function arrayBufferToBuffer(ab) {
 function onSocketFileData(data, socket) {
     // socket.on('fileData' ...
     var fName = data['Name'];
-    var ab = data['Data']; // ArrayBuffer
-    console.log('onSocketFileData, Data:', ab);
+    var ab = data['Data']; // ArrayBuffer?
+    //console.log('onSocketFileData, Data:', ab);
     var blob = '';
     if(Buffer.isBuffer(ab)) {
         console.log("onSocketFileData, Data is Buffer object");
@@ -137,6 +138,7 @@ function onSocketFileData(data, socket) {
     if(fObj.rcvdBytes == fObj.fSize) {
         //If File is Fully Uploaded
         console.log("All file bytes was uploaded, write to fs");
+        //fs.write(fd, buffer, offset, length[, position], callback)
         fs.write(fObj.fHandle, fObj.bytesBuf, 0, fObj.bytesBuf.length, null,
             function(err, written, buffer) {
                 onFileWriteDone(err, written, buffer, fName, socket);
@@ -146,6 +148,7 @@ function onSocketFileData(data, socket) {
     else if(fObj.bytesBuf.length > bufMaxSize) {
         //If the Data Buffer reaches 10MB
         console.log("Buffer overflow, flush data to fs");
+        //fs.write(fd, buffer, offset, length[, position], callback)
         fs.write(fObj.fHandle, fObj.bytesBuf, 0, fObj.bytesBuf.length, null,
             function(err, written, buffer) {
                 onFileWriteBuffer(err, written, buffer, fName, socket);
