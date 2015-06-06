@@ -116,8 +116,15 @@ function onSocketFileData(data, socket) {
     var fName = data['Name'];
     var ab = data['Data']; // ArrayBuffer
     console.log('onSocketFileData, Data:', ab);
-    var blob = new Buffer(new Uint8Array(ab));
-    //var blob = arrayBufferToBuffer(ab);
+    var blob = '';
+    if(Buffer.isBuffer(ab)) {
+        console.log("onSocketFileData, Data is Buffer object");
+        blob = ab
+    }
+    else {
+        console.log("onSocketFileData, Data is ArrayBuffer object, I think so");
+        blob = arrayBufferToBuffer(ab);
+    }
 
     var fObj = filesList[fName];
     fObj.rcvdBytes += ab.length;
@@ -129,7 +136,8 @@ function onSocketFileData(data, socket) {
 
     if(fObj.rcvdBytes == fObj.fSize) {
         //If File is Fully Uploaded
-        fs.write(fObj.fHandle, fObj.bytesBuf, null, 'Binary',
+        console.log("All file bytes was uploaded, write to fs");
+        fs.write(fObj.fHandle, fObj.bytesBuf, 0, fObj.bytesBuf.length, null,
             function(err, written, buffer) {
                 onFileWriteDone(err, written, buffer, fName, socket);
             }
@@ -137,7 +145,8 @@ function onSocketFileData(data, socket) {
     } // finish
     else if(fObj.bytesBuf.length > bufMaxSize) {
         //If the Data Buffer reaches 10MB
-        fs.write(fObj.fHandle, fObj.bytesBuf, null, 'Binary',
+        console.log("Buffer overflow, flush data to fs");
+        fs.write(fObj.fHandle, fObj.bytesBuf, 0, fObj.bytesBuf.length, null,
             function(err, written, buffer) {
                 onFileWriteBuffer(err, written, buffer, fName, socket);
             }
